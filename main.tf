@@ -47,6 +47,9 @@ resource "aws_s3_bucket_acl" "bucket_acl" {
 
 resource "aws_s3_bucket_policy" "policy" {
   bucket = aws_s3_bucket.bucket.id
+  depends_on = [
+    aws_s3_bucket_public_access_block.bucket,
+  ]
   policy = <<EOF
 {
     "Version": "2012-10-17",
@@ -68,9 +71,14 @@ EOF
 }
 
 resource "aws_s3_object" "webapp" {
-    acl          = "public-read"
-    key          = "index.html"
-    bucket       = aws_s3_bucket.bucket.id
+  depends_on = [
+    aws_s3_bucket_acl.bucket_acl,
+    aws_s3_bucket_ownership_controls.bucket,
+  ]
+  
+  acl          = "public-read"
+  key          = "index.html"
+  bucket       = aws_s3_bucket.bucket.id
   content      = file("${path.module}/assets/index.html")
   content_type = "text/html"
 }
